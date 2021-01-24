@@ -90,12 +90,13 @@ Apache Cassandra 3.x Administrator Associate Certification Exam Notes
   * Throughput.
   * Growth Rate.
   * Latency.
+  * read/write ratio
 * cassandra-stress
   * Benchmarking tool used to determine schema performance, scaling and determine production capacity.
   * Configured through a yaml file.
   * Example here - https://github.com/justinbreese/dse-cassandra-stress/blob/master/stress.yaml
 * top
-* dstat
+* dstat - combines iostat vmstat ifstat
   * Versatile tool for generating system resource statistics.
   * https://linux.die.net/man/1/dstat
   * dstat -am - All default stats and memory.
@@ -105,7 +106,11 @@ Apache Cassandra 3.x Administrator Associate Certification Exam Notes
   * https://docs.datastax.com/en/archived/cassandra/3.0/cassandra/tools/toolsNodetool.html
   * https://www.youtube.com/watch?v=0qr9z0lsbuk
   * https://www.youtube.com/watch?v=Sz7OiUWgs5U
-* JVM
+* logging & JVM GC activity
+  * nodetool getlogginglevels
+  * /var/log/cassandra/system.log also a debug.log 
+  * logback.xml same as for Tomcat
+  * /etc/dse/cassandra/jvm.options 
 * Adding Nodes
   * Add a single node at a time.
   * https://docs.datastax.com/en/archived/cassandra/3.0/cassandra/operations/opsAddNodeToCluster.html
