@@ -1,7 +1,6 @@
 # Apache Cassandra Admin Exam Notes
 Apache Cassandra 3.x Administrator Associate Certification Exam Notes
 
-
 ### DS201: DataStax Enterprise 6 Foundations of Apache Cassandra - https://academy.datastax.com/resources/ds201-datastax-enterprise-6-foundations-of-apache-cassandra ###
 * Partitions
   * Group rows physically together on disk based on the partition key.
@@ -16,13 +15,14 @@ Apache Cassandra 3.x Administrator Associate Certification Exam Notes
   * Default ascending order.
   * https://docs.datastax.com/en/dse/6.7/cql/cql/cql_using/useCompoundPrimaryKeyConcept.html
   * https://www.bmc.com/blogs/cassandra-clustering-columns-partition-composite-key/
+  * 2+ inserts on the same PK will be an upsert i.e an update
 * Application Connectivity
   * Drivers - https://docs.datastax.com/en/driver-matrix/doc/driver_matrix/common/driverMatrix.html
 * Node
   * 6K-12K transactions/seconds/core
   * 2-4TB
 * Ring
-  * Notes can have four statuses in the ring UP / DOWN / JOINING / LEAVING.
+  * Nodes can have four statuses in the ring UP / DOWN / JOINING / LEAVING.
   * https://academy.datastax.com/units/2017-ring-dse-foundations-apache-cassandra?resource=ds201-datastax-enterprise-6-foundations-of-apache-cassandra
 * Peer to Peer
   * No one is a leader, no one is a follower. All nodes are equal.
@@ -32,46 +32,61 @@ Apache Cassandra 3.x Administrator Associate Certification Exam Notes
   * Can be configured in the num_tokens parameter in cassandra.yaml.
   * https://docs.datastax.com/en/archived/cassandra/3.0/cassandra/architecture/archDataDistributeVnodesUsing.html
   * https://www.youtube.com/watch?v=G4SMNU1aOJg
-* Gossip
-  * A Gossip round is initiated by a Node every second.
-  * Picks 1-3 Nodes to gossip with.
+* Gossip - nodetool gossipinfo
+  * A Gossip round is initiated by a Node every 1 second. Nodes pick 1-3 others to gossip with.
   * Can gossip with any Node but favours (slightly) seeds and downed Nodes.
   * https://www.edureka.co/blog/gossip-protocol-in-cassandra/
-  * https://www.linkedin.com/pulse/gossip-protocol-inside-apache-cassandra-soham-saha/
+  * STATUS, DC, RACK, SCHEMA, LOAD, EP, HB, etc.  
 * Snitch
-  * GossipingPropertyFileSnitch is the default. Configured in cassandra-rackdc.properties.
+  * Which one is configured in cassandra.yaml
+  * SimpleSnitch is the default for RAC=1 and DC=1
+  * GossipingPropertyFileSnitch < cassandra-rackdc.properties file
+  * PropertyFileSnitch < cassandra-topology.properties file
+  * RackInferringSnitch
 * Replication
+  * RF = 1,2 or 3 (copies of node data on neighbour nodes)
+  * it is a keyspace parameter
 * Consistency
-  * ANY - Store a hint.
-  * ONE, TWO, THREE - Closest to Coordinator.
-  * QUORUM - Majority vote.
+  * Coordinator node sends a direct read request to one node and digest requests to remainder ones to meet CL level
+  * ANY - Store a hint. Do not use.
+  * ONE, TWO, THREE - Closest to Coordinator
+  * QUORUM - Majority vote 51%. 2 is quorum for 3. 3 for 4. 3 for 5.
   * LOCAL_ONE - Limit to local DC.
   * LOCAL_QUORUM Majority vote in local DC.
   * EACH_QUORUM - Majority vote in each DC.
-  * ALL - All nodes must participate.
+  * ALL - All nodes must participate. Worst performance.
 * Hinted Handoff
-  * Default 3 hours.
-  * Enabled by default.
+  * Enabled by default for 3 hours.
+  * settings in cassandra.yaml for hints
 * Read Repair
+  * Cassandra concept to re-sync nodes from time to time.
   * Always occurs when consistency level = ALL.
-  * read_repair_chance - Sets the probability which Cassandra will perform a read repair with a consistency level less than ALL.
+  * read_repair_chance - probability for read repair with CL other than ALL.
 * Node Sync
    DataStax Enterprise 6 feature.
 * Write Path
+  * MemTable ordered by PK/CC but we always append to end of CommitLog
+  * Flush the MemTable to SSTable on disk from time to time.
+  * You can have more than one SSTable for same op on same ring PK
+  * ./nodetool cfstats for more on this
 * Read Path
-  * Bloom filter > Key Cache > Partition Summary > Partition Index > SSTable.
-  * Partition Summary - In memory data structure storing byte offsets into the partition index.
+  * Partition Summary - RAM structure storing byte offset references into the partition index. So ranges of tokens in ram to redirect to to an index entry token on disk in SSTable.
   * The key cache - Stores the byte offset of the most recently accessed records.
-  * Bloom Filter - A Bloom filter is a space-efficient probabilistic data structure, conceived by Burton Howard Bloom in 1970, that is used to test whether an element is a member of a set. False positive matches are possible, but false negatives are not – in other words, a query returns either "possibly in set" or "definitely not in set".
+  * Bloom Filter - A Bloom filter is a space-efficient probabilistic data structure, conceived by Burton Howard Bloom in 1970, that is used to test whether an element is a member of a set. A query returns either "possibly in set" or "definitely not in set".
   * http://cassandra.apache.org/doc/latest/operating/bloom_filters.html
-  * https://en.wikipedia.org/wiki/Bloom_filter
 * Compaction
-  * Process used to remove stale data from existing sstables.
+  * Process used to remove stale data from existing sstables based on timestamps
+  * Think of it like a merge of tables with oldest duplicates and older sstables  getting dropped
   * Compaction Strategies
-    * SizeTiered Compaction - Default. Triggers when multiple sstables of a similar sire are present. Good for high writes.
+    * SizeTiered Compaction - Default. Triggers when multiple sstables of a similar size are present. Good for high writes.
     * Leveled Compaction - Groups sstables into levels. Each level has a fixed size limit which is 10 times larger than the previous level. Good for read heavy use-cases.
     * TimeWindow Compaction - Create time windowed buckets of sstables that are compacted using the Size Tiered compaction strategy.
-* Advanced Performance
+    * A tombstone is a delete with a timestamp newer than its duplicate record
+    * Tombstones older than gc_grace_seconds period are removed
+    * ./nodetool flush - memtables to disk
+  * Advanced Performance
+    * DSE considerations
+
 
 ### DS210: DataStax Enterprise 6 Operations with Apache Cassandra -https://academy.datastax.com/resources/ds210-datastax-enterprise-6-operations-with-apache-cassandra ###
 * Configuring Clusters
@@ -95,7 +110,6 @@ Apache Cassandra 3.x Administrator Associate Certification Exam Notes
   * Benchmarking tool used to determine schema performance, scaling and determine production capacity.
   * Configured through a yaml file.
   * Example here - https://github.com/justinbreese/dse-cassandra-stress/blob/master/stress.yaml
-* top
 * dstat - combines iostat vmstat ifstat
   * Versatile tool for generating system resource statistics.
   * https://linux.die.net/man/1/dstat
@@ -160,18 +174,11 @@ Apache Cassandra 3.x Administrator Associate Certification Exam Notes
 * CQL COPY
   * Built in command to copy data in and out of Cassandra.
   * https://docs.datastax.com/en/archived/cql/3.3/cql/cql_reference/cqlshCopy.html
-
-```sql
-COPY cycling.cyclist_name (id,firstname)
-FROM '../cyclist_firstname.csv'
-WITH HEADER = TRUE ;
-```
-
-```sql
-COPY cycling.cyclist_name (id,firstname)
-TO '../cyclist_firstname.csv'
-WITH HEADER = TRUE ;
-```
+  ```sql
+  COPY cycling.cyclist_name (id,firstname)
+  FROM '../cyclist_firstname.csv'
+  WITH HEADER = TRUE ;
+  ```
 * sstabledump
   * This tool outputs the contents of the specified SSTable in the JSON format.
   * https://docs.datastax.com/en/archived/cassandra/3.0/cassandra/tools/ToolsSSTabledump.html
@@ -187,6 +194,8 @@ WITH HEADER = TRUE ;
 * Backup
 * JVM
   * cassandra-env.sh - jvm.options are in this shell script.
+  * max_heap_size of 8
+  * G1 gc default since java9
 * Garbage Collection
 * Heap Dump
 * Kernel Tuning
@@ -202,6 +211,12 @@ WITH HEADER = TRUE ;
   * Network bandwidth.
 * Cloud
 * Security
+* OpsCenter
+  * browser based DSE cluster tool for monitoring, configuring, management
+  * Backup Service with lots of features
+  * Best Practice service like Azure Advisor
+  * Capacity Service, Performance Service
+  * has a dark theme ++
 
 ### Quiz Trivia ###
 
