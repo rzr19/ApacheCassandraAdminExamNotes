@@ -218,6 +218,34 @@ Apache Cassandra 3.x Administrator Associate Certification Exam Notes
   * Capacity Service, Performance Service
   * has a dark theme ++
 
+### DS220: DataStax Enterprise 6 Practical Application Data Modeling with Apache Cassandra
+* Data Types
+  * there is an IP one inet with IPv4/IPv6 validation
+* Clustering columns
+  * by default ASC and must be used in order of DDL query with PK #1 bcuz full table scans
+* Denormalization
+  * no JOIN statements but object_by_object tables
+  * it's OK to have duplicate data if you need data when you need it and got the $$
+* Collections
+  * set: {'email1@d.d','email2@d.d'}
+  * list: ['berlin','london','france'] - can duplicate, ordered
+  * map: {'key1' : 'val1', 'key2' : 'val2'}
+  * use FROZEN keyword to nest datatypes and turn cells to blobs
+* UDTs
+  * create type full_name ( first_name text, last_name text );
+* Counters
+  * 64 bit signed it, changed incrementally, by UPDATE, need dedicated tables
+  * update foo_counts set foo_count = foo_count + 8 where foo_name = 'foox';
+  * default 0, cannot insert
+* UDFs and UDAs
+  * create or replace function avgState (foo, bar) .. language java .. 
+* Write Techniques
+  * maintain consistency with log BATCH DMLs on related tables
+  * BEGIN BATCH .. INSERT/UPDATE/DELETE .. APPLY BATCH;
+  * Lightweight transactions - condition check before DML /* INSERT INTO xx () values () IF NOT EXISTS; || IF reset_token = 'foo';
+* Read Techniques
+  * secondary indexes
+
 ### Quiz Trivia ###
 
 * What is the node that handles a request called? Coordinator node.
