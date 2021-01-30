@@ -81,9 +81,9 @@ Apache Cassandra 3.x Administrator Associate Certification Exam Notes
     * SizeTiered Compaction - Default. Triggers when multiple sstables of a similar size are present. Good for high writes.
     * Leveled Compaction - Groups sstables into levels. Each level has a fixed size limit which is 10 times larger than the previous level. Good for read heavy use-cases.
     * TimeWindow Compaction - Create time windowed buckets of sstables that are compacted using the Size Tiered compaction strategy.
-    * A tombstone is a delete with a timestamp newer than its duplicate record
-    * Tombstones older than gc_grace_seconds period are removed
-    * ./nodetool flush - memtables to disk
+  * A tombstone is a delete with a timestamp newer than its duplicate record
+  * Tombstones older than gc_grace_seconds period are removed
+  * ./nodetool flush - memtables to disk
   * Advanced Performance
     * DSE considerations
 
